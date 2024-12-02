@@ -1,5 +1,15 @@
+"""
+Define a function to calculate the distance of a location in california to the 
+nearest coast.
+
+Also create a sklearn transformer to add this distance to a numpy array given the 
+column indices of the longitude and latitude.
+"""
+
+import numpy as np
 from shapely.geometry import LineString, Point
 from pyproj import Geod
+from sklearn.base import BaseEstimator, TransformerMixin
 
 # Define the california coastline
 _ca_coast = [
@@ -48,3 +58,22 @@ def distance_to_coast(lon: float, lat: float,) -> float:
     # Determine if point is east or west of coastline
     # Simplified check: if longitude is less than nearest coast point, we're in ocean: return 0
     return 0 if lon < nearest_point.x else distance_km
+
+
+class DistanceToCoast(BaseEstimator, TransformerMixin):
+	"""
+	Transformer which adds distance to coast using the longitude and latitude
+	"""
+	def __init__(self, longitude_index: int, latitude_index: int):
+		super().__init__()
+		self.longitude_index = longitude_index
+		self.latitude_index = latitude_index
+
+	def fit(self, X, y=None):
+		return self
+	
+	def transform(self, X):
+		distances = np.array([distance_to_coast(lon, lat) for lon, lat in X[:, (self.longitude_index, self.latitude_index)]])
+		return np.concat([
+			X, distances.reshape(-1, 1)
+		], axis=1)
