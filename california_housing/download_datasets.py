@@ -33,3 +33,4 @@ def load_housing_data():
         fetch_housing_data()
 
     return pd.read_csv(CSV_PATH)
+ 
